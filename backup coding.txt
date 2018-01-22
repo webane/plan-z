@@ -1,0 +1,68 @@
+Imports System.Data.SqlClient
+Public Class Form2
+
+    Private Sub btncancel_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btncancel.Click
+        Form1.Show()
+        Close()
+    End Sub
+
+    Function getSupplyID()
+        Dim id As String = ""
+        sql = "select coalesce(count(supply_id)+1,1) from tb_supply"
+        cmd = New SqlCommand(sql, con)
+        rd = cmd.ExecuteReader
+        If rd.Read Then
+            If (rd.Item(0) < 10) Then id = "A-00" + rd.Item(0).ToString
+        Else : id = "A-0" + rd.Item(0).ToString
+        End If
+        rd.Close()
+
+        Return id
+    End Function
+
+    Sub getSupplier()
+
+        sql = "Select supplier_id,supplier_name from tb_supplier"
+        cmd = New SqlCommand(sql, con)
+        rd = cmd.ExecuteReader
+        While (rd.Read())
+
+            cmbname.Items.Add(rd.Item(0))
+        End While
+        rd.Close()
+
+    End Sub
+
+    Private Sub Form2_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+
+        connection()
+        getSupplyID()
+        getSupplier()
+
+        cmbname.SelectedIndex = 0
+        Cmbmaterial.SelectedIndex = 0
+        Exit Sub
+    End Sub
+
+    Private Sub Txtqty_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles Txtqty.KeyPress
+        If Not ((e.KeyChar >= "0" And e.KeyChar <= "9") Or e.KeyChar = vbBack) Then e.Handled = True
+    End Sub
+
+    Private Sub btnsave_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnsave.Click
+        Dim supplier, supplier_id, material, material_id, total As String
+        supplier = cmbname.Text
+        supplier_id = supplier.Split(" | ")(0)
+        material = Cmbmaterial.Text
+        material_id = material.Split(" | ")(0)
+
+        sql = "insert into tb_supply values ('" & Txtid.Text + "','" + supplier_id + "',0,'" + DateTime.Now.ToString("yyy-MM-dd") + "')"
+        cmd = New SqlCommand(sql, con)
+        cmd.ExecuteReader()
+
+        sql = "insert into tb_detail_supply (supply_id,material_id,material_qty) values ('" & Txtid.Text & "','" & material_id & "','" & Txtqty.Text & "')"
+        cmd = New SqlCommand(sql, con)
+        cmd.ExecuteNonQuery()
+        If rd.Read() Then total = rd.Item(0)
+        rd.Close()
+    End Sub
+End Class
